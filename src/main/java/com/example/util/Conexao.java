@@ -71,6 +71,64 @@ public class Conexao {
                 criado_em   TEXT    NOT NULL DEFAULT (datetime('now'))
             )
             """,
+            """
+            CREATE TABLE IF NOT EXISTS turma (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                curso TEXT NOT NULL,
+                ano INTEGER NOT NULL
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS modalidade (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL UNIQUE,
+                ativo INTEGER NOT NULL DEFAULT 1 CHECK (ativo IN (0, 1))
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS inscricao (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                time_id INTEGER NOT NULL UNIQUE,
+                modalidade_id INTEGER NOT NULL,
+                data_inscricao TEXT NOT NULL DEFAULT (date('now')),
+                status TEXT NOT NULL DEFAULT 'PENDENTE'
+                    CHECK (status IN ('PENDENTE', 'CONFIRMADA', 'NEGADA')),
+                FOREIGN KEY (time_id) REFERENCES time(id),
+                FOREIGN KEY (modalidade_id) REFERENCES modalidade(id)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS partida (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                modalidade_id INTEGER NOT NULL,
+                time_a_id INTEGER NOT NULL,
+                time_b_id INTEGER NOT NULL,
+                placar_a INTEGER CHECK (placar_a IS NULL OR placar_a >= 0),
+                placar_b INTEGER CHECK (placar_b IS NULL OR placar_b >= 0),
+                data TEXT NOT NULL,
+                hora TEXT NOT NULL,
+                local TEXT NOT NULL,
+                fase TEXT NOT NULL DEFAULT 'AVULSO'
+                    CHECK (fase IN ('AVULSO', 'GRUPOS', 'QUARTAS', 'SEMI', 'FINAL')),
+                status TEXT NOT NULL DEFAULT 'AGENDADA'
+                    CHECK (status IN ('AGENDADA', 'EM_ANDAMENTO', 'FINALIZADA', 'CANCELADA')),
+                CHECK (time_a_id <> time_b_id),
+                FOREIGN KEY (modalidade_id) REFERENCES modalidade(id),
+                FOREIGN KEY (time_a_id) REFERENCES time(id),
+                FOREIGN KEY (time_b_id) REFERENCES time(id)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS configuracao (
+                chave TEXT PRIMARY KEY,
+                valor TEXT NOT NULL
+            )
+            """,
+            "INSERT OR IGNORE INTO configuracao (chave, valor) VALUES ('PONTOS_VITORIA', '3')",
+            "INSERT OR IGNORE INTO configuracao (chave, valor) VALUES ('PONTOS_EMPATE', '1')",
+            "INSERT OR IGNORE INTO configuracao (chave, valor) VALUES ('PONTOS_DERROTA', '0')",
+            "INSERT OR IGNORE INTO configuracao (chave, valor) VALUES ('PERMITE_EMPATE', '1')",
             "INSERT OR IGNORE INTO chave_mestra (chave) VALUES ('ETEC-INTERCLASSE-2026')"
         };
 

@@ -96,14 +96,14 @@ O `OrganizadorFilter` bloqueia as rotas `/api/admin/*` para quem não for organi
 
 ## 4. Entidades do sistema
 
-O que **já existe** na base (`Conexao.criarTabelas`):
+O que **já existia** na base (`Conexao.criarTabelas`):
 
 | Entidade | Tabela | Campos |
 |---|---|---|
 | `Usuario` | `usuario` | `id`, `nome`, `email`, `senha` (hash), `tipo`, `criado_em` |
 | `Time` | `time` | `id`, `nome`, `cor`, `responsavel`, `contato`, `criado_em` |
 
-O que os alunos **precisam criar** (Atividade 1 do README):
+Entidades **criadas na Fase 1** (Atividade 1):
 
 | Entidade | Tabela | Campos |
 |---|---|---|
@@ -210,12 +210,12 @@ Calculada a partir das partidas `FINALIZADAS` de uma modalidade:
 Cada atividade é um pedaço do sistema. Sugestão: uma dupla por atividade.
 
 ### Fase 1 — Fundamentos
-- [ ] **1. Criar as tabelas restantes** (`turma`, `modalidade`, `inscricao`, `partida`, `configuracao`)
+- [x] **1. Criar as tabelas restantes** (`turma`, `modalidade`, `inscricao`, `partida`, `configuracao`)
       com as chaves estrangeiras apontando para as tabelas existentes.
       Dica: adicione o `CREATE TABLE` dentro de `Conexao.criarTabelas`.
-- [ ] **2. Criar os Models** `Turma`, `Modalidade`, `Inscricao`, `Partida`, `Configuracao`
+- [x] **2. Criar os Models** `Turma`, `Modalidade`, `Inscricao`, `Partida`, `Configuracao`
       (use `Time` e `Usuario` como modelo).
-- [ ] **3. Criar os DAOs** correspondentes, com os 5 métodos CRUD
+- [x] **3. Criar os DAOs** correspondentes, com os 5 métodos CRUD
       (veja `TimeDao` como referência).
 
 ### Fase 2 — CRUDs e rotas
@@ -264,3 +264,11 @@ Cada atividade é um pedaço do sistema. Sugestão: uma dupla por atividade.
 - **Datas:** texto no formato `yyyy-MM-dd` (`2026-11-20`).
 - **SQL:** sempre `PreparedStatement`, nunca concatenar string.
 - **Controller:** valida a entrada, chama o DAO e monta a resposta. Sem SQL na controller.
+
+## Registro de alterações — Fase 1
+
+- **Atividade 1 concluída:** adicionadas as tabelas `turma`, `modalidade`, `inscricao`, `partida` e `configuracao` em `Conexao.criarTabelas`, com chaves estrangeiras, restrições de status/fase e valores iniciais da configuração. `inscricao.time_id` é único para respeitar a regra de uma modalidade por time.
+- **Atividade 2 concluída:** criados os cinco Models com construtores, getters e setters. Datas e horas são textos, conforme a convenção do projeto.
+- **Atividade 3 concluída:** criados os cinco DAOs com `inserir`, `listar`, `buscarPorId` (ou `buscarPorChave`), `atualizar` e `deletar`, usando `PreparedStatement`.
+- **Preservado:** Controllers, login, sessões, filtro, DAOs e Models originais. Nenhuma dependência foi adicionada.
+- **Ainda pendente:** Controllers/endpoints (Fase 2), validações de regras de negócio na camada de requisição, classificação e demais fases. Os DAOs desta fase executam CRUD, mas não substituem as validações de inscrições e partidas previstas nas fases seguintes.
