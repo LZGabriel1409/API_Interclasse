@@ -1,7 +1,6 @@
 package com.example.filter;
 
-import com.example.util.JsonUtil;
-import com.example.util.SessaoUtil;
+import java.io.IOException;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -12,13 +11,15 @@ import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+
+import com.example.util.JsonUtil;
+import com.example.util.SessaoUtil;
 
 /**
  * Filtro que protege as rotas /api/admin/*.
  * Somente usuarios do tipo ORGANIZADOR (logados com chave mestra) acessam essas rotas.
  */
-@WebFilter("/api/admin/*")
+@WebFilter("/admin/*")
 public class OrganizadorFilter implements Filter {
 
     @Override

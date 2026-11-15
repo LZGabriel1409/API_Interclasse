@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.dao.TimeDao;
 import com.example.model.Time;
 import com.example.util.JsonUtil;
+import com.example.util.SessaoUtil;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -55,12 +56,17 @@ public class TimeController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        if (semPermissao(request, response)) return;
         try {
             Time time = JsonUtil.ler(request, Time.class);
-            if (time == null || time.getNome() == null || time.getNome().isBlank()) {
+            if (time == null || !JsonUtil.preenchido(time.getNome())) {
                 JsonUtil.enviarErro(response, HttpServletResponse.SC_BAD_REQUEST, "nome e obrigatorio");
                 return;
             }
+            time.setNome(time.getNome().trim());
+            if (time.getCor() != null) time.setCor(time.getCor().trim());
+            if (time.getResponsavel() != null) time.setResponsavel(time.getResponsavel().trim());
+            if (time.getContato() != null) time.setContato(time.getContato().trim());
             dao.inserir(time);
             JsonUtil.enviar(response, time);
 
@@ -71,6 +77,7 @@ public class TimeController extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        if (semPermissao(request, response)) return;
         try {
             String id = request.getParameter("id");
             if (id == null) {
@@ -83,6 +90,11 @@ public class TimeController extends HttpServlet {
                 JsonUtil.enviarErro(response, HttpServletResponse.SC_BAD_REQUEST, "corpo da requisicao invalido");
                 return;
             }
+            if (!JsonUtil.preenchido(time.getNome())) {
+                JsonUtil.enviarErro(response, HttpServletResponse.SC_BAD_REQUEST, "nome e obrigatorio");
+                return;
+            }
+            time.setNome(time.getNome().trim());
             time.setId(Integer.parseInt(id));
 
             if (!dao.atualizar(time)) {
@@ -100,6 +112,7 @@ public class TimeController extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        if (semPermissao(request, response)) return;
         try {
             String id = request.getParameter("id");
             if (id == null) {
@@ -119,4 +132,11 @@ public class TimeController extends HttpServlet {
             JsonUtil.enviarErro(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
+    private boolean semPermissao(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        if (SessaoUtil.ehOrganizador(request)) return false;
+        int status = SessaoUtil.estaLogado(request) ? HttpServletResponse.SC_FORBIDDEN : HttpServletResponse.SC_UNAUTHORIZED;
+        JsonUtil.enviarErro(response, status, status == 401 ? "faca login para continuar" : "acesso restrito a organizadores");
+        return true;
+    }
 }
+

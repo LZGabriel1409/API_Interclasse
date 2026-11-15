@@ -1,61 +1,56 @@
 package com.example.dao;
 
-import com.example.model.Configuracao;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.example.util.Conexao;
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
-/** Operacoes CRUD da tabela configuracao. */
 public class ConfiguracaoDao {
-    public List<Configuracao> listar() throws SQLException {
-        List<Configuracao> lista = new ArrayList<>();
-        try (PreparedStatement ps = Conexao.getConexao().prepareStatement("SELECT * FROM configuracao ORDER BY chave");
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) lista.add(mapear(rs));
-        }
-        return lista;
-    }
 
-    public Configuracao buscarPorChave(String chave) throws SQLException {
-        try (PreparedStatement ps = Conexao.getConexao().prepareStatement("SELECT * FROM configuracao WHERE chave = ?")) {
-            ps.setString(1, chave);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? mapear(rs) : null;
+    public Map<String, String> listarTodas() {
+        Map<String, String> configs = new HashMap<>();
+        String sql = "SELECT chave, valor FROM configuracao";
+        try (Connection conn = Conexao.getConexao();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                configs.put(rs.getString("chave"), rs.getString("valor"));
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+        return configs;
     }
 
-    public Configuracao inserir(Configuracao item) throws SQLException {
-        String sql = "INSERT INTO configuracao (chave, valor) VALUES (?, ?)";
-        try (PreparedStatement ps = Conexao.getConexao().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, item.getChave());
-            ps.setString(2, item.getValor());
-            ps.executeUpdate();
+    public String obterValor(String chave, String valorPadrao) {
+        String sql = "SELECT valor FROM configuracao WHERE chave = ?";
+        try (Connection conn = Conexao.getConexao();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, chave);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("valor");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return item;
+        return valorPadrao;
     }
 
-    public boolean atualizar(Configuracao item) throws SQLException {
+    public void atualizar(String chave, String valor) {
         String sql = "UPDATE configuracao SET valor = ? WHERE chave = ?";
-        try (PreparedStatement ps = Conexao.getConexao().prepareStatement(sql)) {
-            ps.setString(1, item.getValor());
-            ps.setString(2, item.getChave());
-            return ps.executeUpdate() > 0;
+        try (Connection conn = Conexao.getConexao();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, valor);
+            stmt.setString(2, chave);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-    }
-
-    public boolean deletar(String chave) throws SQLException {
-        try (PreparedStatement ps = Conexao.getConexao().prepareStatement("DELETE FROM configuracao WHERE chave = ?")) {
-            ps.setString(1, chave);
-            return ps.executeUpdate() > 0;
-        }
-    }
-
-    private Configuracao mapear(ResultSet rs) throws SQLException {
-        Configuracao item = new Configuracao();
-        item.setChave(rs.getString("chave"));
-        item.setValor(rs.getString("valor"));
-        return item;
     }
 }

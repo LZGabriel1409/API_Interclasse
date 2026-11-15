@@ -120,6 +120,16 @@ public class Conexao {
             )
             """,
             """
+            CREATE TABLE IF NOT EXISTS jogador (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                time_id INTEGER NOT NULL,
+                gols INTEGER NOT NULL DEFAULT 0 CHECK (gols >= 0),
+                assistencias INTEGER NOT NULL DEFAULT 0 CHECK (assistencias >= 0),
+                FOREIGN KEY (time_id) REFERENCES time(id)
+            )
+            """,
+            """
             CREATE TABLE IF NOT EXISTS configuracao (
                 chave TEXT PRIMARY KEY,
                 valor TEXT NOT NULL

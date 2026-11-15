@@ -93,6 +93,14 @@ public class AuthController extends HttpServlet {
             JsonUtil.enviarErro(response, HttpServletResponse.SC_BAD_REQUEST, "nome, email e senha sao obrigatorios");
             return;
         }
+        if (!JsonUtil.emailValido(credencial.email)) {
+            JsonUtil.enviarErro(response, HttpServletResponse.SC_BAD_REQUEST, "email invalido: informe um endereco no formato nome@dominio.com");
+            return;
+        }
+        if (credencial.senha.length() < 6) {
+            JsonUtil.enviarErro(response, HttpServletResponse.SC_BAD_REQUEST, "senha deve possuir pelo menos 6 caracteres");
+            return;
+        }
 
         if (organizador) {
             if (credencial.chaveMestra == null || !dao.chaveExiste(credencial.chaveMestra)) {
@@ -101,14 +109,14 @@ public class AuthController extends HttpServlet {
             }
         }
 
-        if (dao.buscarPorEmail(credencial.email) != null) {
+        if (dao.buscarPorEmail(credencial.email.trim().toLowerCase()) != null) {
             JsonUtil.enviarErro(response, HttpServletResponse.SC_CONFLICT, "email ja cadastrado");
             return;
         }
 
         Usuario usuario = new Usuario(
-                credencial.nome,
-                credencial.email,
+                credencial.nome.trim(),
+                credencial.email.trim().toLowerCase(),
                 SessaoUtil.hashSenha(credencial.senha),
                 organizador ? "ORGANIZADOR" : "PARTICIPANTE"
         );
@@ -120,12 +128,16 @@ public class AuthController extends HttpServlet {
     private void login(HttpServletRequest request, HttpServletResponse response) throws IOException, SQLException {
         Credencial credencial = JsonUtil.ler(request, Credencial.class);
 
-        if (credencial == null || credencial.email == null || credencial.senha == null) {
+        if (credencial == null || !JsonUtil.preenchido(credencial.email) || !JsonUtil.preenchido(credencial.senha)) {
             JsonUtil.enviarErro(response, HttpServletResponse.SC_BAD_REQUEST, "email e senha sao obrigatorios");
             return;
         }
+        if (!JsonUtil.emailValido(credencial.email)) {
+            JsonUtil.enviarErro(response, HttpServletResponse.SC_BAD_REQUEST, "email invalido");
+            return;
+        }
 
-        Usuario usuario = dao.buscarPorEmail(credencial.email);
+        Usuario usuario = dao.buscarPorEmail(credencial.email.trim().toLowerCase());
         if (usuario == null || !usuario.getSenha().equals(SessaoUtil.hashSenha(credencial.senha))) {
             JsonUtil.enviarErro(response, HttpServletResponse.SC_UNAUTHORIZED, "email ou senha invalidos");
             return;

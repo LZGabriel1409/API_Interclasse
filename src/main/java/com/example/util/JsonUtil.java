@@ -2,6 +2,8 @@ package com.example.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -43,7 +45,11 @@ public class JsonUtil {
         out.flush();
     }
 
-    /** Le o corpo da requisicao e converte para o tipo informado. */
+    /**
+     * Le o corpo da requisicao e converte para o tipo informado.
+     * Retorna null quando o corpo esta vazio ou nao e um JSON valido, para que
+     * a controller responda 400 em vez de estourar erro 500.
+     */
     public static <T> T ler(HttpServletRequest request, Class<T> classe) throws IOException {
         BufferedReader reader = request.getReader();
         StringBuilder sb = new StringBuilder();
@@ -51,10 +57,24 @@ public class JsonUtil {
         while ((linha = reader.readLine()) != null) {
             sb.append(linha);
         }
-        if (sb.length() == 0) {
+        if (sb.toString().isBlank()) {
             return null;
         }
-        return gson.fromJson(sb.toString(), classe);
+        try {
+            return gson.fromJson(sb.toString(), classe);
+        } catch (JsonSyntaxException | JsonIOException e) {
+            return null;
+        }
+    }
+
+    /** Valida formato básico de e-mail para uso nas controllers. */
+    public static boolean emailValido(String email) {
+        return email != null && email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+    }
+
+    /** Verifica se uma string contém texto útil (não nulo e não vazia). */
+    public static boolean preenchido(String valor) {
+        return valor != null && !valor.isBlank();
     }
 
     /** Objeto simples de retorno de erro. */
