@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interclasse ETEC</title>
+<style>
+  :root { --azul:#0b5cab; --fundo:#f4f5f7; --borda:#dcdfe4; --texto:#22262b; --cinza:#5b6470; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif; color:var(--texto); background:var(--fundo); }
+  header { background:var(--azul); color:#fff; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  header h1 { font-size:18px; margin:0; font-weight:600; }
+  #usuario { font-size:14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  main { max-width:1000px; margin:20px auto 60px; padding:0 16px; display:grid; gap:16px; }
+  .card { background:#fff; border:1px solid var(--borda); border-radius:10px; padding:16px; }
+  .card h2 { font-size:16px; margin:0 0 12px; }
+  .linha { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end; }
+  .campo { display:flex; flex-direction:column; gap:4px; flex:1 1 130px; }
+  label { font-size:12px; color:var(--cinza); }
+  input, select { padding:8px; border:1px solid var(--borda); border-radius:6px; font:inherit; background:#fff; width:100%; }
+  button { padding:8px 14px; border:1px solid transparent; border-radius:6px; background:var(--azul); color:#fff; font:inherit; cursor:pointer; }
+  button.secundario { background:#e7ecf3; color:var(--azul); border-color:var(--borda); }
+  button.perigo { background:#fff; color:#b3261e; border-color:#e7b4b0; }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  table { width:100%; border-collapse:collapse; font-size:14px; margin-top:12px; }
+  th, td { text-align:left; padding:8px; border-bottom:1px solid var(--borda); vertical-align:middle; }
+  th { font-size:12px; text-transform:uppercase; letter-spacing:.03em; color:var(--cinza); }
+  td.num { width:56px; }
+  td.num input { width:52px; text-align:center; padding:4px; }
+  .vazio { color:#7a8290; font-size:14px; }
+  .msg { padding:10px 14px; border-radius:8px; margin:0; font-size:14px; }
+  .msg.erro { background:#fdecea; color:#8c1d18; }
+  .msg.ok { background:#e6f4ea; color:#13612c; }
+  .dica { font-size:12px; color:#7a8290; margin:10px 0 0; }
+  .acoes { display:flex; gap:6px; flex-wrap:wrap; }
+  .selo { font-size:12px; padding:2px 8px; border-radius:999px; background:#eef1f5; color:var(--cinza); }
+  a { color:var(--azul); }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Interclasse ETEC</h1>
+  <div id="usuario"></div>
+</header>
+
+<main>
+  <p id="msg" class="msg" hidden></p>
+
+  <section class="card" id="tela-login">
+    <h2>Entrar</h2>
+    <form id="form-login" class="linha">
+      <div class="campo"><label>E-mail</label><input type="email" name="email" autocomplete="username" required></div>
+      <div class="campo"><label>Senha</label><input type="password" name="senha" autocomplete="current-password" required></div>
+      <button type="submit">Entrar</button>
+    </form>
+
+    <p class="dica">Primeiro acesso: cadastre o organizador com a chave mestra <strong>ETEC-INTERCLASSE-2026</strong>.</p>
+    <form id="form-organizador" class="linha" style="margin-top:10px">
+      <div class="campo"><label>Nome</label><input name="nome" required></div>
+      <div class="campo"><label>E-mail</label><input type="email" name="email" required></div>
+      <div class="campo"><label>Senha (mín. 6)</label><input type="password" name="senha" minlength="6" required></div>
+      <div class="campo"><label>Chave mestra</label><input name="chaveMestra" required></div>
+      <button type="submit" class="secundario">Cadastrar organizador</button>
+    </form>
+  </section>
+
+  <div id="app" hidden>
+
+    <section class="card">
+      <h2>Times</h2>
+      <form id="form-time" class="linha admin">
+        <div class="campo"><label>Nome</label><input name="nome" required></div>
+        <div class="campo"><label>Cor</label><input name="cor"></div>
+        <div class="campo"><label>Responsável</label><input name="responsavel"></div>
+        <div class="campo"><label>Contato</label><input name="contato"></div>
+        <button type="submit">Adicionar</button>
+      </form>
+      <table>
+        <thead><tr><th class="num">#</th><th>Time</th><th>Cor</th><th>Responsável</th><th>Contato</th><th></th></tr></thead>
+        <tbody id="lista-times"></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Modalidades</h2>
+      <form id="form-modalidade" class="linha admin">
+        <div class="campo"><label>Nome</label><input name="nome" placeholder="Futsal, Vôlei..." required></div>
+        <button type="submit">Adicionar</button>
+      </form>
+      <table>
+        <thead><tr><th class="num">#</th><th>Modalidade</th><th>Ativa</th><th></th></tr></thead>
+        <tbody id="lista-modalidades"></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Inscrições</h2>
+      <form id="form-inscricao" class="linha">
+        <div class="campo"><label>Time</label><select name="timeId" id="insc-time" required></select></div>
+        <div class="campo"><label>Modalidade</label><select name="modalidadeId" id="insc-modalidade" required></select></div>
+        <button type="submit">Inscrever</button>
+      </form>
+      <p class="dica">A inscrição nasce <strong>PENDENTE</strong>; só o organizador confirma ou nega.</p>
+      <table>
+        <thead><tr><th class="num">#</th><th>Time</th><th>Modalidade</th><th>Data</th><th>Status</th><th></th></tr></thead>
+        <tbody id="lista-inscricoes"></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Partidas</h2>
+      <form id="form-partida" class="linha admin">
+        <div class="campo"><label>Modalidade</label><select name="modalidadeId" id="part-modalidade" required></select></div>
+        <div class="campo"><label>Time A</label><select name="timeAId" id="part-timeA" required></select></div>
+        <div class="campo"><label>Time B</label><select name="timeBId" id="part-timeB" required></select></div>
+        <div class="campo"><label>Data</label><input type="date" name="data" required></div>
+        <div class="campo"><label>Hora</label><input type="time" name="hora" value="14:00" required></div>
+        <div class="campo"><label>Local</label><input name="local" placeholder="Quadra 1" required></div>
+        <div class="campo"><label>Fase</label>
+          <select name="fase">
+            <option>AVULSO</option><option>GRUPOS</option><option>QUARTAS</option><option>SEMI</option><option>FINAL</option>
+          </select>
+        </div>
+        <button type="submit">Agendar</button>
+      </form>
+      <p class="dica">Os dois times precisam ter inscrição <strong>CONFIRMADA</strong> na modalidade escolhida.</p>
+      <table>
+        <thead><tr><th class="num">#</th><th>Modalidade</th><th>Fase</th><th>Data</th><th>Jogo</th><th>Placar</th><th>Status</th><th></th></tr></thead>
+        <tbody id="lista-partidas"></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Classificação</h2>
+      <div class="linha">
+        <div class="campo"><label>Modalidade</label><select id="class-modalidade"></select></div>
+        <a id="link-csv" href="#" target="_blank" rel="noopener">Baixar CSV</a>
+      </div>
+      <p class="dica">Conta apenas partidas <strong>FINALIZADA</strong>, com a pontuação configurada na API.</p>
+      <table>
+        <thead><tr><th class="num">Pos</th><th>Time</th><th>P</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th></tr></thead>
+        <tbody id="lista-classificacao"></tbody>
+      </table>
+    </section>
+
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var BASE = location.pathname.replace(/\/[^/]*$/, ''); // ex.: /api
+  var usuario = null;
+  var times = [];
+  var modalidades = [];
+
+  function $(id) { return document.getElementById(id); }
+
+  function esc(valor) {
+    return String(valor == null ? '' : valor).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function ehAdmin() { return !!usuario && usuario.tipo === 'ORGANIZADOR'; }
+
+  function aviso(texto, tipo) {
+    var el = $('msg');
+    el.textContent = texto;
+    el.className = 'msg ' + (tipo || 'ok');
+    el.hidden = false;
+    clearTimeout(aviso.timer);
+    aviso.timer = setTimeout(function () { el.hidden = true; }, 6000);
+  }
+
+  async function api(metodo, caminho, corpo) {
+    var opcoes = { method: metodo, credentials: 'same-origin', headers: {} };
+    if (corpo !== undefined) {
+      opcoes.headers['Content-Type'] = 'application/json';
+      opcoes.body = JSON.stringify(corpo);
+    }
+    var resp = await fetch(BASE + caminho, opcoes);
+    var tipo = resp.headers.get('content-type') || '';
+    var dados = tipo.indexOf('json') >= 0 ? await resp.json() : await resp.text();
+    if (!resp.ok) {
+      var erro = new Error(dados && dados.erro ? dados.erro : 'Erro ' + resp.status);
+      erro.status = resp.status;
+      throw erro;
+    }
+    return dados;
+  }
+
+  function achar(lista, id) {
+    for (var i = 0; i < lista.length; i++) {
+      if (lista[i].id === id) return lista[i];
+    }
+    return null;
+  }
+  function nomeTime(id) { var t = achar(times, id); return t ? t.nome : '#' + id; }
+  function nomeModalidade(id) { var m = achar(modalidades, id); return m ? m.nome : '#' + id; }
+
+  function opcoes(lista, rotulo, vazio) {
+    var html = vazio ? '<option value="">' + esc(vazio) + '</option>' : '';
+    return html + lista.map(function (item) {
+      return '<option value="' + item.id + '">' + esc(rotulo(item)) + '</option>';
+    }).join('');
+  }
+
+  async function iniciar() {
+    try { usuario = await api('GET', '/auth/me'); }
+    catch (e) { usuario = null; }
+    mostrar();
+  }
+
+  function mostrar() {
+    var logado = !!usuario;
+    $('tela-login').hidden = logado;
+    $('app').hidden = !logado;
+
+    if (!logado) {
+      $('usuario').innerHTML = '';
+      return;
+    }
+
+    $('usuario').innerHTML = '<span>' + esc(usuario.nome) + ' &middot; ' + esc(usuario.tipo) + '</span>' +
+      '<button type="button" class="secundario" id="btn-sair">Sair</button>';
+    $('btn-sair').addEventListener('click', sair);
+
+    var campos = document.querySelectorAll('.admin');
+    for (var i = 0; i < campos.length; i++) campos[i].hidden = !ehAdmin();
+
+    carregarTudo();
+  }
+
+  async function sair() {
+    try { await api('POST', '/auth/logout'); } catch (e) { /* ignora */ }
+    usuario = null;
+    times = [];
+    modalidades = [];
+    mostrar();
+  }
+
+  async function carregarTudo() {
+    try {
+      times = await api('GET', '/times');
+      modalidades = await api('GET', '/modalidades');
+      desenharTimes();
+      desenharModalidades();
+      preencherSelects();
+      await carregarInscricoes();
+      await carregarPartidas();
+      await carregarClassificacao();
+    } catch (e) {
+      if (e.status === 401) { usuario = null; mostrar(); }
+      aviso(e.message, 'erro');
+    }
+  }
+
+  function desenharTimes() {
+    var tbody = $('lista-times');
+    if (!times.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="vazio">Nenhum time cadastrado.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = times.map(function (t) {
+      return '<tr><td class="num">' + t.id + '</td><td>' + esc(t.nome) + '</td><td>' + esc(t.cor) +
+        '</td><td>' + esc(t.responsavel) + '</td><td>' + esc(t.contato) + '</td><td class="acoes">' +
+        (ehAdmin() ? '<button type="button" class="perigo" data-del-time="' + t.id + '">Remover</button>' : '') +
+        '</td></tr>';
+    }).join('');
+  }
+
+  function desenharModalidades() {
+    var tbody = $('lista-modalidades');
+    if (!modalidades.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="vazio">Nenhuma modalidade cadastrada.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = modalidades.map(function (m) {
+      return '<tr><td class="num">' + m.id + '</td><td>' + esc(m.nome) + '</td><td>' +
+        (m.ativo === 1 ? 'Sim' : 'Não') + '</td><td class="acoes">' +
+        (ehAdmin() ? '<button type="button" class="perigo" data-del-modalidade="' + m.id + '">Remover</button>' : '') +
+        '</td></tr>';
+    }).join('');
+  }
+
+  function preencherSelects(selecionadaClassificacao) {
+    var ativas = modalidades.filter(function (m) { return m.ativo === 1; });
+
+    $('insc-time').innerHTML = opcoes(times, function (t) { return t.nome; }, times.length ? null : 'Nenhum time');
+    $('insc-modalidade').innerHTML = opcoes(ativas, function (m) { return m.nome; }, ativas.length ? null : 'Nenhuma modalidade');
+    $('part-modalidade').innerHTML = opcoes(ativas, function (m) { return m.nome; }, ativas.length ? null : 'Nenhuma modalidade');
+    $('part-timeA').innerHTML = opcoes(times, function (t) { return t.nome; }, times.length ? null : 'Nenhum time');
+    $('part-timeB').innerHTML = opcoes(times, function (t) { return t.nome; }, times.length ? null : 'Nenhum time');
+
+    var atual = selecionadaClassificacao || $('class-modalidade').value;
+    $('class-modalidade').innerHTML = opcoes(modalidades, function (m) { return m.nome; }, 'Selecione');
+    if (atual && achar(modalidades, Number(atual))) {
+      $('class-modalidade').value = atual;
+    } else if (modalidades.length) {
+      $('class-modalidade').value = String(modalidades[0].id);
+    }
+  }
+
+  async function carregarInscricoes() {
+    var tbody = $('lista-inscricoes');
+    var inscricoes;
+    try { inscricoes = await api('GET', '/inscricoes'); }
+    catch (e) { tbody.innerHTML = '<tr><td colspan="6" class="vazio">' + esc(e.message) + '</td></tr>'; return; }
+
+    if (!inscricoes.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="vazio">Nenhuma inscrição.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = inscricoes.map(function (i) {
+      var botoes = '';
+      if (ehAdmin() && i.status === 'PENDENTE') {
+        botoes = '<button type="button" class="secundario" data-inscricao="' + i.id + '" data-status="CONFIRMADA">Confirmar</button>' +
+          '<button type="button" class="perigo" data-inscricao="' + i.id + '" data-status="NEGADA">Negar</button>';
+      }
+      return '<tr><td class="num">' + i.id + '</td><td>' + esc(nomeTime(i.timeId)) + '</td><td>' +
+        esc(nomeModalidade(i.modalidadeId)) + '</td><td>' + esc(i.dataInscricao) + '</td><td><span class="selo">' +
+        esc(i.status) + '</span></td><td class="acoes">' + botoes + '</td></tr>';
+    }).join('');
+  }
+
+  async function carregarPartidas() {
+    var tbody = $('lista-partidas');
+    var partidas;
+    try { partidas = await api('GET', '/partidas'); }
+    catch (e) { tbody.innerHTML = '<tr><td colspan="8" class="vazio">' + esc(e.message) + '</td></tr>'; return; }
+
+    if (!partidas.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="vazio">Nenhuma partida agendada.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = partidas.map(function (p) {
+      var finalizada = p.status === 'FINALIZADA';
+      var placar;
+      var acoes = '';
+      if (ehAdmin() && !finalizada) {
+        placar = '<input type="number" min="0" id="pa-' + p.id + '" value="' + (p.placarA == null ? '' : p.placarA) + '">' +
+          ' x <input type="number" min="0" id="pb-' + p.id + '" value="' + (p.placarB == null ? '' : p.placarB) + '">';
+        acoes = '<button type="button" class="secundario" data-salvar-placar="' + p.id + '">Salvar placar</button>' +
+          '<button type="button" class="secundario" data-finalizar="' + p.id + '">Finalizar</button>';
+      } else {
+        placar = (p.placarA == null ? '-' : p.placarA) + ' x ' + (p.placarB == null ? '-' : p.placarB);
+      }
+      return '<tr><td class="num">' + p.id + '</td><td>' + esc(nomeModalidade(p.modalidadeId)) + '</td><td>' +
+        esc(p.fase) + '</td><td>' + esc(p.data) + ' ' + esc(p.hora) + '</td><td>' +
+        esc(nomeTime(p.timeAId)) + ' x ' + esc(nomeTime(p.timeBId)) + '</td><td class="num">' + placar +
+        '</td><td><span class="selo">' + esc(p.status) + '</span></td><td class="acoes">' + acoes + '</td></tr>';
+    }).join('');
+  }
+
+  async function carregarClassificacao() {
+    var tbody = $('lista-classificacao');
+    var modalidadeId = $('class-modalidade').value;
+    var link = $('link-csv');
+
+    if (!modalidadeId) {
+      tbody.innerHTML = '<tr><td colspan="9" class="vazio">Cadastre uma modalidade para ver a classificação.</td></tr>';
+      link.href = '#';
+      link.style.display = 'none';
+      return;
+    }
+
+    link.style.display = '';
+    link.href = BASE + '/classificacao?modalidadeId=' + encodeURIComponent(modalidadeId) + '&formato=csv';
+
+    var tabela;
+    try { tabela = await api('GET', '/classificacao?modalidadeId=' + encodeURIComponent(modalidadeId)); }
+    catch (e) { tbody.innerHTML = '<tr><td colspan="9" class="vazio">' + esc(e.message) + '</td></tr>'; return; }
+
+    tbody.innerHTML = tabela.map(function (t, indice) {
+      return '<tr><td class="num">' + (indice + 1) + '</td><td>' + esc(t.nomeTime) + '</td><td>' + t.pontos +
+        '</td><td>' + t.vitorias + '</td><td>' + t.empates + '</td><td>' + t.derrotas + '</td><td>' + t.golsPro +
+        '</td><td>' + t.golsContra + '</td><td>' + t.saldoGols + '</td></tr>';
+    }).join('') || '<tr><td colspan="9" class="vazio">Nenhum time cadastrado.</td></tr>';
+  }
+
+  /* ---------- formularios ---------- */
+
+  $('form-login').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var form = ev.target;
+    try {
+      await api('POST', '/auth/login', { email: form.email.value.trim(), senha: form.senha.value });
+      form.reset();
+      usuario = await api('GET', '/auth/me');
+      mostrar();
+      aviso('Bem-vindo, ' + usuario.nome + '!');
+    } catch (e) {
+      aviso(e.message, 'erro');
+    }
+  });
+
+  $('form-organizador').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var form = ev.target;
+    try {
+      await api('POST', '/auth/registrar-organizador', {
+        nome: form.nome.value.trim(),
+        email: form.email.value.trim(),
+        senha: form.senha.value,
+        chaveMestra: form.chaveMestra.value.trim()
+      });
+      form.reset();
+      aviso('Organizador cadastrado. Agora faça login.');
+    } catch (e) {
+      aviso(e.message, 'erro');
+    }
+  });
+
+  $('form-time').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var form = ev.target;
+    try {
+      await api('POST', '/times', {
+        nome: form.nome.value.trim(),
+        cor: form.cor.value.trim(),
+        responsavel: form.responsavel.value.trim(),
+        contato: form.contato.value.trim()
+      });
+      form.reset();
+      await carregarTudo();
+      aviso('Time cadastrado.');
+    } catch (e) {
+      aviso(e.message, 'erro');
+    }
+  });
+
+  $('form-modalidade').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var form = ev.target;
+    try {
+      await api('POST', '/modalidades', { nome: form.nome.value.trim() });
+      form.reset();
+      await carregarTudo();
+      aviso('Modalidade cadastrada.');
+    } catch (e) {
+      aviso(e.message, 'erro');
+    }
+  });
+
+  $('form-inscricao').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var form = ev.target;
+    try {
+      await api('POST', '/inscricoes', {
+        timeId: Number(form.timeId.value),
+        modalidadeId: Number(form.modalidadeId.value)
+      });
+      await carregarTudo();
+      aviso('Inscrição enviada (PENDENTE).');
+    } catch (e) {
+      aviso(e.message, 'erro');
+    }
+  });
+
+  $('form-partida').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var form = ev.target;
+    try {
+      await api('POST', '/partidas', {
+        modalidadeId: Number(form.modalidadeId.value),
+        timeAId: Number(form.timeAId.value),
+        timeBId: Number(form.timeBId.value),
+        data: form.data.value,
+        hora: form.hora.value,
+        local: form.local.value.trim(),
+        fase: form.fase.value
+      });
+      await carregarTudo();
+      aviso('Partida agendada.');
+    } catch (e) {
+      aviso(e.message, 'erro');
+    }
+  });
+
+  $('class-modalidade').addEventListener('change', carregarClassificacao);
+
+  /* ---------- botoes das tabelas ---------- */
+
+  document.addEventListener('click', async function (ev) {
+    var alvo = ev.target.closest('button[data-del-time],button[data-del-modalidade],button[data-inscricao],button[data-salvar-placar],button[data-finalizar]');
+    if (!alvo) return;
+
+    try {
+      if (alvo.dataset.delTime) {
+        await api('DELETE', '/times?id=' + alvo.dataset.delTime);
+        await carregarTudo();
+        aviso('Time removido.');
+      } else if (alvo.dataset.delModalidade) {
+        await api('DELETE', '/modalidades?id=' + alvo.dataset.delModalidade);
+        await carregarTudo();
+        aviso('Modalidade removida.');
+      } else if (alvo.dataset.inscricao) {
+        await api('PUT', '/inscricoes?id=' + alvo.dataset.inscricao, { status: alvo.dataset.status });
+        await carregarTudo();
+        aviso('Inscrição ' + alvo.dataset.status.toLowerCase() + '.');
+      } else if (alvo.dataset.salvarPlacar) {
+        var id = alvo.dataset.salvarPlacar;
+        await api('PATCH', '/partidas?id=' + id, {
+          placarA: Number($('pa-' + id).value),
+          placarB: Number($('pb-' + id).value)
+        });
+        await carregarPartidas();
+        aviso('Placar salvo.');
+      } else if (alvo.dataset.finalizar) {
+        await api('POST', '/partidas/finalizar?id=' + alvo.dataset.finalizar);
+        await carregarTudo();
+        aviso('Partida finalizada.');
+      }
+    } catch (e) {
+      aviso(e.message, 'erro');
+    }
+  });
+
+  iniciar();
+})();
+</script>
+</body>
+</html>
